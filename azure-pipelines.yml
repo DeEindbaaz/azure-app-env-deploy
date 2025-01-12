@@ -1,0 +1,34 @@
+trigger:
+- main
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+steps:
+- task: AzureCLI@2
+  inputs:
+    azureSubscription: 'Dev-SubscriptionConnection'
+    scriptType: 'bash'
+    scriptLocation: 'inlineScript'
+    inlineScript: |
+      RESOURCE_GROUP="MyResourceGroup"
+      LOCATION="westeurope"
+      
+      # Check if the resource group exists
+      if ! az group show --name $RESOURCE_GROUP &>/dev/null; then
+        echo "Resource group $RESOURCE_GROUP does not exist. Creating..."
+        az group create --name $RESOURCE_GROUP --location $LOCATION
+      else
+        echo "Resource group $RESOURCE_GROUP already exists."
+      fi
+
+- task: AzureCLI@2
+  inputs:
+    azureSubscription: 'Dev-SubscriptionConnection'
+    scriptType: 'bash'
+    scriptLocation: 'inlineScript'
+    inlineScript: |
+      az deployment group create \
+        --resource-group MyResourceGroup \
+        --template-file main.bicep \
+        --parameters location=westeurope
